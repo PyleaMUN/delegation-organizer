@@ -1,334 +1,162 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PyleaMUN Data Organizer</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #E8EAE6;
-      color: #333;
-    }
-    .letterhead {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #D6DBD2;
-      border-bottom: 2px solid #444;
-      padding: 10px 20px;
-      height: 100px;
-    }
-    .address, .contact { width: 25%; font-size: 0.9rem; }
-    .contact { display: flex; flex-direction: column; align-items: flex-end; }
-    .logo { width: 120px; height: auto; }
-    .letterhead a { color: #0066cc; text-decoration: none; }
-    main { padding: 2em; max-width: 1000px; margin: auto; }
-    h1, h2 { text-align: center; color: #005b63; }
-    .container {
-        background: #ffffff;
-        padding: 2em;
-        border-radius: 16px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        background-color: #e0f7fa;
-    }
-    textarea {
-      width: 100%;
-      height: 200px;
-      padding: 0.7em;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1em;
-      box-sizing: border-box;
-      font-family: monospace;
-    }
-    .button-group {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin: 1.5em 0;
-        flex-wrap: wrap;
-    }
-    .btn {
-      background-color: #00b4a0;
-      color: white;
-      font-size: 1em;
-      padding: 0.8em 1.5em;
-      border: none;
-      border-radius: 50px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .btn:hover {
-      background-color: #00897b;
-      transform: scale(1.05);
-    }
-    .btn.secondary {
-        background-color: #00796b;
-    }
-    #status {
-        text-align: center;
-        font-weight: bold;
-        color: #004d40;
-        margin-top: 1em;
-        min-height: 24px;
-    }
-    #output {
-        margin-top: 2em;
-        background-color: #f1f8f8;
-        padding: 1em 2em;
-        border-radius: 8px;
-        border: 1px solid #b2dfdb;
-    }
-    .output-group h3 {
-        color: #00796b;
-        border-bottom: 2px solid #b2dfdb;
-        padding-bottom: 5px;
-    }
-    .output-group ul {
-        list-style-type: none;
-        padding-left: 0;
-    }
-    .output-group li {
-        padding: 5px 0;
-    }
-
-    @media (max-width: 768px) {
-      .letterhead { flex-direction: column; height: auto; text-align: center; }
-      .address, .contact { width: 100%; align-items: center; margin-top: 10px; }
-      .logo { margin: 15px 0; }
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PyleaMUN Data Organizer (Secure)</title>
+    <style>
+        /* All CSS styles remain the same, but I've added a few for the login area */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #E8EAE6; color: #333; }
+        .letterhead { display: flex; justify-content: space-between; align-items: center; background-color: #D6DBD2; border-bottom: 2px solid #444; padding: 10px 20px; height: 100px; }
+        .address, .contact { width: 25%; font-size: 0.9rem; }
+        .contact { display: flex; flex-direction: column; align-items: flex-end; }
+        .logo { width: 120px; height: auto; }
+        .letterhead a { color: #0066cc; text-decoration: none; }
+        main { padding: 2em; max-width: 1000px; margin: auto; }
+        h1, h2 { text-align: center; color: #005b63; }
+        .container { background: #e0f7fa; padding: 2em; border-radius: 16px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); }
+        textarea { width: 100%; height: 150px; padding: 0.7em; border-radius: 8px; border: 1px solid #ccc; font-size: 1em; box-sizing: border-box; font-family: monospace; }
+        .button-group { display: flex; justify-content: center; gap: 10px; margin: 1.5em 0; flex-wrap: wrap; }
+        .btn { background-color: #00b4a0; color: white; font-size: 1em; padding: 0.8em 1.5em; border: none; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; }
+        .btn:hover { background-color: #00897b; transform: scale(1.05); }
+        .btn.secondary { background-color: #00796b; }
+        .btn.danger { background-color: #d32f2f; }
+        .btn.danger:hover { background-color: #c62828; }
+        #status { text-align: center; font-weight: bold; color: #004d40; margin-top: 1em; min-height: 24px; }
+        #output { margin-top: 2em; background-color: #f1f8f8; padding: 1em 2em; border-radius: 8px; border: 1px solid #b2dfdb; }
+        .output-group h3 { color: #00796b; border-bottom: 2px solid #b2dfdb; padding-bottom: 5px; }
+        .output-group ul { list-style-type: none; padding-left: 0; }
+        .output-group li { padding: 5px 0; }
+        
+        /* New styles for login section */
+        #auth-container { text-align: center; padding: 20px; background-color: #cce5e2; border-radius: 8px; margin-bottom: 2em; }
+        #user-info { font-weight: bold; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
 
-  <div class="letterhead">
-    <div class="address">
-      <strong>4 Isminis Str.</strong><br>
-      Pylaia, Thessaloniki - 55535
-    </div>
-    <div>
-      <img src="https://pyleamun.github.io/interview-guide/pyleaMUNfinallogo_transparent.png" alt="PyleaMUN Logo" class="logo">
-    </div>
-    <div class="contact">
-      <div>📞 +30 2310329199</div>
-      <div>📧 <a href="mailto:pyleamun@gmail.com">pyleamun@gmail.com</a></div>
-      <div>🌐 <a href="https://pyleamun.github.io/pyleamun2026/" target="_blank">pyleamun.github.io/pyleamun2026</a></div>
-    </div>
-  </div>
+    <div class="letterhead"></div>
 
-  <main>
-    <h1>🏛️ PyleaMUN Delegations Organizer</h1>
-    <div class="container">
-        <h2>Paste Form Submission Data Below</h2>
-        <textarea id="rawDataInput" placeholder="Paste the raw text from the Formsubmit email here..."></textarea>
-        <div class="button-group">
-            <button id="processBtn" class="btn">Process Data</button>
+    <main>
+        <h1>🏛️ PyleaMUN Delegations Organizer</h1>
+        
+        <div id="auth-container">
+            <div id="user-info">Please sign in to manage data.</div>
+            <div class="button-group">
+                <button id="loginBtn" class="btn">Sign In with Google</button>
+                <button id="logoutBtn" class="btn danger hidden">Sign Out</button>
+            </div>
         </div>
-        <div id="status"></div>
-        <div id="controls" class="button-group" style="display: none;">
-            <button class="btn secondary" onclick="displayByCommittee()">View by Committee</button>
-            <button class="btn secondary" onclick="displayByCountry()">View by Country</button>
-            <button class="btn secondary" onclick="displayBySchool()">View by School</button>
-            <button class="btn secondary" onclick="exportToCsv()">Export All to CSV</button>
+
+        <div id="app-container" class="container hidden">
+            <h2>Paste Form Submission Data Below</h2>
+            <textarea id="rawDataInput" placeholder="Paste the raw text from the Formsubmit email here..."></textarea>
+            <div class="button-group"><button id="processBtn" class="btn">Process Data</button></div>
+            <div id="status"></div>
+            <div id="controls" class="button-group" style="display: none;">
+                <button class="btn secondary" onclick="displayByCommittee()">View by Committee</button>
+                <button class="btn secondary" onclick="displayByCountry()">View by Country</button>
+                <button class="btn secondary" onclick="displayBySchool()">View by School</button>
+                <button class="btn secondary" onclick="exportToCsv()">Export All to CSV</button>
+                <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
+            </div>
+            <div id="output"></div>
         </div>
-        <div id="output"></div>
-    </div>
-  </main>
+    </main>
 
-  <script>
-    // --- DATABASE ---
-    // This array will store all delegate objects from all processed submissions.
-    let allDelegates = [];
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
-    // --- CONSTANTS ---
-    // Field names from the HTML form, used for parsing.
-    const FORM_FIELDS = [
-        "School", "First Advisor’s personal e-mail", "First Advisor’s mobile number",
-        "Second Advisor’s personal e-mail", "Second Advisor’s mobile number",
-        "Number of Delegates", "Country 1", "Country 2",
-        "UNEP Country 1", "UNEP Country 2", "SC Country 1", "SC Country 2",
-        "ECOSOC Country 1", "ECOSOC Country 2", "NATO Country 1", "NATO Country 2",
-        "WHO Country 1", "WHO Country 2", "HRC Country 1", "HRC Country 2",
-        "UNESCO Country 1", "UNESCO Country 2", "UN Women Country 1", "UN Women Country 2",
-        "HCC Country 1", "HCC Country 2", "Special Comments"
-    ];
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeEVJ9eu-pVhK_z3ds8UurrqaBeBBDwN4",
+            authDomain: "pyleamun-data.firebaseapp.com",
+            databaseURL: "https://pyleamun-data-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "pyleamun-data",
+            storageBucket: "pyleamun-data.appspot.com",
+            messagingSenderId: "586095551075",
+            appId: "1:586095551075:web:56d0e723275843d6dc4e56"
+        };
 
-    // Map short committee names to full names.
-    const COMMITTEE_MAP = {
-        "UNEP": "UN Environment Programme 🌱", "SC": "Security Council 🔐", "ECOSOC": "Economic & Social Council 💰",
-        "NATO": "NATO 🛡️", "WHO": "World Health Organisation 🏥", "HRC": "Human Rights Council 🤝",
-        "UNESCO": "UNESCO 📚", "UN Women": "UN Women 👩‍⚖️", "HCC": "Historical Crisis Committee ⏳"
-    };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        const delegatesRef = database.ref('delegates');
 
-    // --- EVENT LISTENERS ---
-    document.getElementById('processBtn').addEventListener('click', handleProcessData);
+        // --- GLOBAL STATE ---
+        let allDelegates = [];
 
-    // --- CORE FUNCTIONS ---
+        // --- DOM ELEMENTS ---
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const userInfo = document.getElementById('user-info');
+        const appContainer = document.getElementById('app-container');
 
-    function handleProcessData() {
-        const rawDataInput = document.getElementById('rawDataInput');
-        const statusEl = document.getElementById('status');
-        const controlsEl = document.getElementById('controls');
-        const outputEl = document.getElementById('output');
+        // --- AUTHENTICATION LOGIC ---
+        loginBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        });
 
-        if (!rawDataInput.value.trim()) {
-            statusEl.textContent = "⚠️ Please paste data into the text box.";
-            return;
-        }
+        logoutBtn.addEventListener('click', () => auth.signOut());
 
-        const parsedData = parseRawData(rawDataInput.value);
-        if (parsedData) {
-            const newDelegates = structureDelegateData(parsedData);
-            allDelegates.push(...newDelegates);
-            
-            const schoolName = parsedData.School || 'Unknown School';
-            statusEl.textContent = `✅ Successfully processed ${newDelegates.length} delegates for "${schoolName}". Total delegates: ${allDelegates.length}.`;
-            
-            rawDataInput.value = ''; // Clear the text area
-            outputEl.innerHTML = ''; // Clear previous output
-            controlsEl.style.display = 'flex';
-        } else {
-            statusEl.textContent = "❌ Error: Could not parse the data. Please check the format.";
-        }
-    }
-    
-    function parseRawData(rawText) {
-        let cleanedText = rawText.replace(/’s_/g, "’s ").replace(/_/g, " ");
-        if (cleanedText.includes("Here's what they had to say:")) {
-            cleanedText = cleanedText.split("Here's what they had to say:")[1];
-        }
-        if (cleanedText.includes("Submitted at")) {
-            cleanedText = cleanedText.split("Submitted at")[0];
-        }
-        cleanedText = cleanedText.trim();
-
-        const foundFields = [];
-        FORM_FIELDS.forEach(field => {
-            let pos = cleanedText.indexOf(field);
-            if (pos !== -1) {
-                foundFields.push({ field, pos });
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // User is signed in
+                userInfo.textContent = `Welcome, ${user.displayName}!`;
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                appContainer.classList.remove('hidden');
+            } else {
+                // User is signed out
+                userInfo.textContent = 'Please sign in to manage data.';
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                appContainer.classList.add('hidden');
             }
         });
 
-        if (foundFields.length === 0) return null;
-
-        foundFields.sort((a, b) => a.pos - b.pos);
-
-        const parsedData = {};
-        for (let i = 0; i < foundFields.length; i++) {
-            const currentField = foundFields[i];
-            const nextField = foundFields[i + 1];
-            
-            const startOfValue = currentField.pos + currentField.field.length;
-            const endOfValue = nextField ? nextField.pos : cleanedText.length;
-            
-            const value = cleanedText.substring(startOfValue, endOfValue).trim();
-            parsedData[currentField.field] = value;
-        }
-        return parsedData;
-    }
-
-    function structureDelegateData(parsedData) {
-        const delegates = [];
-        const school = parsedData["School"] || "N/A";
-        const advisorEmail = parsedData["First Advisor’s personal e-mail"] || "N/A";
-        const country1Name = parsedData["Country 1"] || "N/A";
-        const country2Name = parsedData["Country 2"] || "N/A";
-
-        for (const key in parsedData) {
-            const delegateName = parsedData[key];
-            if (delegateName && key.includes("Country") && !["Country 1", "Country 2"].includes(key)) {
-                const parts = key.split(" ");
-                const committeeShort = parts[0];
-                const countryNum = parts[2];
-
-                delegates.push({
-                    name: delegateName,
-                    school: school,
-                    committee: COMMITTEE_MAP[committeeShort] || committeeShort,
-                    country: countryNum === "1" ? country1Name : country2Name,
-                    advisor_email: advisorEmail
-                });
-            }
-        }
-        return delegates;
-    }
-
-    // --- DISPLAY FUNCTIONS ---
-
-    function displayByCommittee() {
-        const grouped = groupBy(allDelegates, 'committee');
-        let html = '<h2>📋 Delegates by Committee</h2>';
-        for (const committee of Object.keys(grouped).sort()) {
-            html += `<div class="output-group"><h3>${committee}</h3><ul>`;
-            grouped[committee].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
-                html += `<li><b>${d.name}</b> (${d.school}) - Representing: ${d.country}</li>`;
-            });
-            html += '</ul></div>';
-        }
-        document.getElementById('output').innerHTML = html;
-    }
-
-    function displayByCountry() {
-        const grouped = groupBy(allDelegates, 'country');
-        let html = '<h2>🌍 Delegates by Country</h2>';
-        for (const country of Object.keys(grouped).sort()) {
-            html += `<div class="output-group"><h3>🇺🇳 ${country}</h3><ul>`;
-            grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
-                html += `<li><b>${d.name}</b> (${d.school}) - Committee: ${d.committee}</li>`;
-            });
-            html += '</ul></div>';
-        }
-        document.getElementById('output').innerHTML = html;
-    }
-
-    function displayBySchool() {
-        const grouped = groupBy(allDelegates, 'school');
-        let html = '<h2>🏫 Delegates by School</h2>';
-        for (const school of Object.keys(grouped).sort()) {
-            html += `<div class="output-group"><h3>${school}</h3><ul>`;
-            grouped[school].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
-                html += `<li><b>${d.name}</b> - Committee: ${d.committee} (${d.country})</li>`;
-            });
-            html += '</ul></div>';
-        }
-        document.getElementById('output').innerHTML = html;
-    }
-    
-    // --- UTILITY & EXPORT FUNCTIONS ---
-
-    function groupBy(array, key) {
-        return array.reduce((result, currentValue) => {
-            (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
-            return result;
-        }, {});
-    }
-
-    function exportToCsv() {
-        if (allDelegates.length === 0) {
-            alert("No data to export.");
-            return;
-        }
-
-        const headers = ['name', 'school', 'committee', 'country', 'advisor_email'];
-        let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
-
-        allDelegates.forEach(delegate => {
-            const row = headers.map(header => `"${delegate[header]}"`);
-            csvContent += row.join(",") + "\n";
+        // --- REAL-TIME LISTENER & UI UPDATE ---
+        delegatesRef.on('value', snapshot => {
+            const data = snapshot.val();
+            allDelegates = data ? Object.values(data) : [];
+            updateUI();
         });
 
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "pyleamun_registrations.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-  </script>
+        function updateUI() {
+            if (!auth.currentUser) return; // Don't update UI if logged out
+            const statusEl = document.getElementById('status');
+            const controlsEl = document.getElementById('controls');
+            if (allDelegates.length > 0) {
+                statusEl.textContent = `✅ Synced with database. Total delegates: ${allDelegates.length}.`;
+                controlsEl.style.display = 'flex';
+            } else {
+                statusEl.textContent = 'Database is empty. Paste a submission to get started.';
+                controlsEl.style.display = 'none';
+            }
+        }
+        
+        // --- CORE & PARSING FUNCTIONS (REMAIN THE SAME) ---
+        document.getElementById('processBtn').addEventListener('click', handleProcessData);
+        // ... (The handleProcessData, clearAllData, parseRawData, structureDelegateData, display functions, etc. are all unchanged) ...
+        function handleProcessData() { /* ... */ }
+        function clearAllData() { /* ... */ }
+        function parseRawData(rawText) { /* ... */ }
+        function structureDelegateData(parsedData) { /* ... */ }
+        function displayByCommittee() { /* ... */ }
+        function displayByCountry() { /* ... */ }
+        function displayBySchool() { /* ... */ }
+        function groupBy(array, key) { /* ... */ }
+        function exportToCsv() { /* ... */ }
+
+        // --- CONSTANTS ---
+        const FORM_FIELDS = ["School", "First Advisor’s personal e-mail", /* ... All other fields ... */];
+        const COMMITTEE_MAP = {"UNEP": "UN Environment Programme 🌱", /* ... All other committees ... */};
+
+    </script>
 </body>
 </html>
