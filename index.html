@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PyleaMUN Data Organizer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #E8EAE6;
+      color: #333;
+    }
+    .letterhead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #D6DBD2;
+      border-bottom: 2px solid #444;
+      padding: 10px 20px;
+      height: 100px;
+    }
+    .address, .contact { width: 25%; font-size: 0.9rem; }
+    .contact { display: flex; flex-direction: column; align-items: flex-end; }
+    .logo { width: 120px; height: auto; }
+    .letterhead a { color: #0066cc; text-decoration: none; }
+    main { padding: 2em; max-width: 1000px; margin: auto; }
+    h1, h2 { text-align: center; color: #005b63; }
+    .container {
+        background: #ffffff;
+        padding: 2em;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        background-color: #e0f7fa;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 0.7em;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+      box-sizing: border-box;
+      font-family: monospace;
+    }
+    .button-group {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 1.5em 0;
+        flex-wrap: wrap;
+    }
+    .btn {
+      background-color: #00b4a0;
+      color: white;
+      font-size: 1em;
+      padding: 0.8em 1.5em;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .btn:hover {
+      background-color: #00897b;
+      transform: scale(1.05);
+    }
+    .btn.secondary {
+        background-color: #00796b;
+    }
+    #status {
+        text-align: center;
+        font-weight: bold;
+        color: #004d40;
+        margin-top: 1em;
+        min-height: 24px;
+    }
+    #output {
+        margin-top: 2em;
+        background-color: #f1f8f8;
+        padding: 1em 2em;
+        border-radius: 8px;
+        border: 1px solid #b2dfdb;
+    }
+    .output-group h3 {
+        color: #00796b;
+        border-bottom: 2px solid #b2dfdb;
+        padding-bottom: 5px;
+    }
+    .output-group ul {
+        list-style-type: none;
+        padding-left: 0;
+    }
+    .output-group li {
+        padding: 5px 0;
+    }
+
+    @media (max-width: 768px) {
+      .letterhead { flex-direction: column; height: auto; text-align: center; }
+      .address, .contact { width: 100%; align-items: center; margin-top: 10px; }
+      .logo { margin: 15px 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="letterhead">
+    <div class="address">
+      <strong>4 Isminis Str.</strong><br>
+      Pylaia, Thessaloniki - 55535
+    </div>
+    <div>
+      <img src="https://pyleamun.github.io/interview-guide/pyleaMUNfinallogo_transparent.png" alt="PyleaMUN Logo" class="logo">
+    </div>
+    <div class="contact">
+      <div>📞 +30 2310329199</div>
+      <div>📧 <a href="mailto:pyleamun@gmail.com">pyleamun@gmail.com</a></div>
+      <div>🌐 <a href="https://pyleamun.github.io/pyleamun2026/" target="_blank">pyleamun.github.io/pyleamun2026</a></div>
+    </div>
+  </div>
+
+  <main>
+    <h1>🏛️ PyleaMUN Delegations Organizer</h1>
+    <div class="container">
+        <h2>Paste Form Submission Data Below</h2>
+        <textarea id="rawDataInput" placeholder="Paste the raw text from the Formsubmit email here..."></textarea>
+        <div class="button-group">
+            <button id="processBtn" class="btn">Process Data</button>
+        </div>
+        <div id="status"></div>
+        <div id="controls" class="button-group" style="display: none;">
+            <button class="btn secondary" onclick="displayByCommittee()">View by Committee</button>
+            <button class="btn secondary" onclick="displayByCountry()">View by Country</button>
+            <button class="btn secondary" onclick="displayBySchool()">View by School</button>
+            <button class="btn secondary" onclick="exportToCsv()">Export All to CSV</button>
+        </div>
+        <div id="output"></div>
+    </div>
+  </main>
+
+  <script>
+    // --- DATABASE ---
+    // This array will store all delegate objects from all processed submissions.
+    let allDelegates = [];
+
+    // --- CONSTANTS ---
+    // Field names from the HTML form, used for parsing.
+    const FORM_FIELDS = [
+        "School", "First Advisor’s personal e-mail", "First Advisor’s mobile number",
+        "Second Advisor’s personal e-mail", "Second Advisor’s mobile number",
+        "Number of Delegates", "Country 1", "Country 2",
+        "UNEP Country 1", "UNEP Country 2", "SC Country 1", "SC Country 2",
+        "ECOSOC Country 1", "ECOSOC Country 2", "NATO Country 1", "NATO Country 2",
+        "WHO Country 1", "WHO Country 2", "HRC Country 1", "HRC Country 2",
+        "UNESCO Country 1", "UNESCO Country 2", "UN Women Country 1", "UN Women Country 2",
+        "HCC Country 1", "HCC Country 2", "Special Comments"
+    ];
+
+    // Map short committee names to full names.
+    const COMMITTEE_MAP = {
+        "UNEP": "UN Environment Programme 🌱", "SC": "Security Council 🔐", "ECOSOC": "Economic & Social Council 💰",
+        "NATO": "NATO 🛡️", "WHO": "World Health Organisation 🏥", "HRC": "Human Rights Council 🤝",
+        "UNESCO": "UNESCO 📚", "UN Women": "UN Women 👩‍⚖️", "HCC": "Historical Crisis Committee ⏳"
+    };
+
+    // --- EVENT LISTENERS ---
+    document.getElementById('processBtn').addEventListener('click', handleProcessData);
+
+    // --- CORE FUNCTIONS ---
+
+    function handleProcessData() {
+        const rawDataInput = document.getElementById('rawDataInput');
+        const statusEl = document.getElementById('status');
+        const controlsEl = document.getElementById('controls');
+        const outputEl = document.getElementById('output');
+
+        if (!rawDataInput.value.trim()) {
+            statusEl.textContent = "⚠️ Please paste data into the text box.";
+            return;
+        }
+
+        const parsedData = parseRawData(rawDataInput.value);
+        if (parsedData) {
+            const newDelegates = structureDelegateData(parsedData);
+            allDelegates.push(...newDelegates);
+            
+            const schoolName = parsedData.School || 'Unknown School';
+            statusEl.textContent = `✅ Successfully processed ${newDelegates.length} delegates for "${schoolName}". Total delegates: ${allDelegates.length}.`;
+            
+            rawDataInput.value = ''; // Clear the text area
+            outputEl.innerHTML = ''; // Clear previous output
+            controlsEl.style.display = 'flex';
+        } else {
+            statusEl.textContent = "❌ Error: Could not parse the data. Please check the format.";
+        }
+    }
+    
+    function parseRawData(rawText) {
+        let cleanedText = rawText.replace(/’s_/g, "’s ").replace(/_/g, " ");
+        if (cleanedText.includes("Here's what they had to say:")) {
+            cleanedText = cleanedText.split("Here's what they had to say:")[1];
+        }
+        if (cleanedText.includes("Submitted at")) {
+            cleanedText = cleanedText.split("Submitted at")[0];
+        }
+        cleanedText = cleanedText.trim();
+
+        const foundFields = [];
+        FORM_FIELDS.forEach(field => {
+            let pos = cleanedText.indexOf(field);
+            if (pos !== -1) {
+                foundFields.push({ field, pos });
+            }
+        });
+
+        if (foundFields.length === 0) return null;
+
+        foundFields.sort((a, b) => a.pos - b.pos);
+
+        const parsedData = {};
+        for (let i = 0; i < foundFields.length; i++) {
+            const currentField = foundFields[i];
+            const nextField = foundFields[i + 1];
+            
+            const startOfValue = currentField.pos + currentField.field.length;
+            const endOfValue = nextField ? nextField.pos : cleanedText.length;
+            
+            const value = cleanedText.substring(startOfValue, endOfValue).trim();
+            parsedData[currentField.field] = value;
+        }
+        return parsedData;
+    }
+
+    function structureDelegateData(parsedData) {
+        const delegates = [];
+        const school = parsedData["School"] || "N/A";
+        const advisorEmail = parsedData["First Advisor’s personal e-mail"] || "N/A";
+        const country1Name = parsedData["Country 1"] || "N/A";
+        const country2Name = parsedData["Country 2"] || "N/A";
+
+        for (const key in parsedData) {
+            const delegateName = parsedData[key];
+            if (delegateName && key.includes("Country") && !["Country 1", "Country 2"].includes(key)) {
+                const parts = key.split(" ");
+                const committeeShort = parts[0];
+                const countryNum = parts[2];
+
+                delegates.push({
+                    name: delegateName,
+                    school: school,
+                    committee: COMMITTEE_MAP[committeeShort] || committeeShort,
+                    country: countryNum === "1" ? country1Name : country2Name,
+                    advisor_email: advisorEmail
+                });
+            }
+        }
+        return delegates;
+    }
+
+    // --- DISPLAY FUNCTIONS ---
+
+    function displayByCommittee() {
+        const grouped = groupBy(allDelegates, 'committee');
+        let html = '<h2>📋 Delegates by Committee</h2>';
+        for (const committee of Object.keys(grouped).sort()) {
+            html += `<div class="output-group"><h3>${committee}</h3><ul>`;
+            grouped[committee].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                html += `<li><b>${d.name}</b> (${d.school}) - Representing: ${d.country}</li>`;
+            });
+            html += '</ul></div>';
+        }
+        document.getElementById('output').innerHTML = html;
+    }
+
+    function displayByCountry() {
+        const grouped = groupBy(allDelegates, 'country');
+        let html = '<h2>🌍 Delegates by Country</h2>';
+        for (const country of Object.keys(grouped).sort()) {
+            html += `<div class="output-group"><h3>🇺🇳 ${country}</h3><ul>`;
+            grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                html += `<li><b>${d.name}</b> (${d.school}) - Committee: ${d.committee}</li>`;
+            });
+            html += '</ul></div>';
+        }
+        document.getElementById('output').innerHTML = html;
+    }
+
+    function displayBySchool() {
+        const grouped = groupBy(allDelegates, 'school');
+        let html = '<h2>🏫 Delegates by School</h2>';
+        for (const school of Object.keys(grouped).sort()) {
+            html += `<div class="output-group"><h3>${school}</h3><ul>`;
+            grouped[school].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                html += `<li><b>${d.name}</b> - Committee: ${d.committee} (${d.country})</li>`;
+            });
+            html += '</ul></div>';
+        }
+        document.getElementById('output').innerHTML = html;
+    }
+    
+    // --- UTILITY & EXPORT FUNCTIONS ---
+
+    function groupBy(array, key) {
+        return array.reduce((result, currentValue) => {
+            (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
+            return result;
+        }, {});
+    }
+
+    function exportToCsv() {
+        if (allDelegates.length === 0) {
+            alert("No data to export.");
+            return;
+        }
+
+        const headers = ['name', 'school', 'committee', 'country', 'advisor_email'];
+        let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
+
+        allDelegates.forEach(delegate => {
+            const row = headers.map(header => `"${delegate[header]}"`);
+            csvContent += row.join(",") + "\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "pyleamun_registrations.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
