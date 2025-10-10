@@ -22,6 +22,7 @@
         .btn:hover { background-color: #00897b; }
         .btn.secondary { background-color: #00796b; }
         .btn.danger { background-color: #d32f2f; }
+        .btn.export { background-color: #1e88e5; }
         #status { text-align: center; font-weight: bold; color: #004d40; margin-top: 1em; min-height: 24px; }
         #output h3 { color: #00796b; border-bottom: 2px solid #b2dfdb; padding-bottom: 5px; }
         #output ul { list-style-type: none; padding-left: 0; }
@@ -52,7 +53,6 @@
                     <button class="btn secondary" onclick="displayByCommittee()">View by Committee</button>
                     <button class="btn secondary" onclick="displayByCountry()">View by Country</button>
                     <button class="btn secondary" onclick="displayBySchool()">View by School</button>
-                    <button class="btn secondary" onclick="exportToCsv()">Export All to CSV</button>
                     <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
                 </div>
                 <div id="output"></div>
@@ -162,8 +162,11 @@
             const COMMITTEE_MAP = {"UNEP": "UN Environment Programme 🌱", "SC": "Security Council 🔐", "ECOSOC": "Economic & Social Council 💰", "NATO": "NATO 🛡️", "WHO": "World Health Organisation 🏥", "HRC": "Human Rights Council 🤝", "UNESCO": "UNESCO 📚", "UN Women": "UN Women 👩‍⚖️", "HCC": "Historical Crisis Committee ⏳"};
 
             for (const key in parsedData) {
-                const delegateName = parsedData[key];
+                let delegateName = parsedData[key];
                 if (delegateName && key.includes("Country") && !["Country 1", "Country 2"].includes(key)) {
+                    // This is where names are converted to Sentence Case
+                    delegateName = toSentenceCase(delegateName);
+
                     const parts = key.split(" ");
                     const committeeShort = parts[0];
                     const countryNum = parts[2];
@@ -186,20 +189,19 @@
         function displayBySchool() {
             const grouped = groupBy(allDelegates, 'school');
             let html = '<h2>🏫 Delegates by School</h2>';
+            html += `<div class="button-group"><button class="btn export" onclick="exportBySchool()">Export this View</button></div>`;
+
             for (const school of Object.keys(grouped).sort()) {
                 const schoolDelegates = grouped[school];
                 const firstDelegate = schoolDelegates[0];
-                
-                html += `<h3>${school}</h3>`;
-                html += `<div class="advisor-info">`;
+                html += `<h3>${school}</h3><div class="advisor-info">`;
                 if (firstDelegate.advisor1_email || firstDelegate.advisor1_mobile) {
-                    html += `<strong>Advisor 1:</strong> ${firstDelegate.advisor1_email || 'No Email'} | ${firstDelegate.advisor1_mobile || 'No Mobile'}<br>`;
+                    html += `<strong>Advisor 1:</strong> ${firstDelegate.advisor1_email || 'N/A'} | ${firstDelegate.advisor1_mobile || 'N/A'}<br>`;
                 }
                 if (firstDelegate.advisor2_email || firstDelegate.advisor2_mobile) {
-                    html += `<strong>Advisor 2:</strong> ${firstDelegate.advisor2_email || 'No Email'} | ${firstDelegate.advisor2_mobile || 'No Mobile'}`;
+                    html += `<strong>Advisor 2:</strong> ${firstDelegate.advisor2_email || 'N/A'} | ${firstDelegate.advisor2_mobile || 'N/A'}`;
                 }
                 html += `</div><ul>`;
-                
                 schoolDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
                     html += `<li><b>${d.name}</b> - Committee: ${d.committee} (${d.country})</li>`;
                 });
@@ -207,25 +209,92 @@
             }
             document.getElementById('output').innerHTML = html;
         }
+        
+        function displayByCommittee() {
+            const grouped = groupBy(allDelegates, 'committee');
+            let html = '<h2>📋 Delegates by Committee</h2>';
+            html += `<div class="button-group"><button class="btn export" onclick="exportByCommittee()">Export this View</button></div>`;
+            
+            for (const committee of Object.keys(grouped).sort()) {
+                html += `<h3>${committee}</h3><ul>`;
+                grouped[committee].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => { html += `<li><b>${d.name}</b> (${d.school}) - Representing: ${d.country}</li>`; });
+                html += '</ul>';
+            }
+            document.getElementById('output').innerHTML = html;
+        }
+        
+        function displayByCountry() {
+            const grouped = groupBy(allDelegates, 'country');
+            let html = '<h2>🌍 Delegates by Country</h2>';
+            html += `<div class="button-group"><button class="btn export" onclick="exportByCountry()">Export this View</button></div>`;
 
-        function exportToCsv() {
-            if (allDelegates.length === 0) { alert("No data to export."); return; }
-            const headers = ['name', 'school', 'committee', 'country', 'advisor1_email', 'advisor1_mobile', 'advisor2_email', 'advisor2_mobile'];
-            let csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n";
-            allDelegates.forEach(delegate => {
-                const row = headers.map(header => `"${(delegate[header] || "").replace(/"/g, '""')}"`);
-                csvContent += row.join(",") + "\n";
-            });
-            const encodedUri = encodeURI(csvContent);
+            for (const country of Object.keys(grouped).sort()) {
+                html += `<h3>🇺🇳 ${country}</h3><ul>`;
+                grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => { html += `<li><b>${d.name}</b> (${d.school}) - Committee: ${d.committee}</li>`; });
+                html += '</ul>';
+            }
+            document.getElementById('output').innerHTML = html;
+        }
+
+        // --- EXPORT FUNCTIONS ---
+        function exportBySchool() {
+            const grouped = groupBy(allDelegates, 'school');
+            let csvContent = "School,Advisor 1 Email,Advisor 1 Mobile,Advisor 2 Email,Advisor 2 Mobile,Delegate Name,Committee,Country\n";
+            for (const school of Object.keys(grouped).sort()) {
+                const schoolDelegates = grouped[school];
+                schoolDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                    const row = [d.school, d.advisor1_email, d.advisor1_mobile, d.advisor2_email, d.advisor2_mobile, d.name, cleanText(d.committee), d.country];
+                    csvContent += row.map(val => `"${(val || "").replace(/"/g, '""')}"`).join(",") + "\n";
+                });
+            }
+            downloadCsv(csvContent, "delegates_by_school.csv");
+        }
+
+        function exportByCommittee() {
+            const grouped = groupBy(allDelegates, 'committee');
+            let csvContent = "Committee,Delegate Name,School,Country\n";
+            for (const committee of Object.keys(grouped).sort()) {
+                grouped[committee].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                    const row = [cleanText(d.committee), d.name, d.school, d.country];
+                    csvContent += row.map(val => `"${(val || "").replace(/"/g, '""')}"`).join(",") + "\n";
+                });
+            }
+            downloadCsv(csvContent, "delegates_by_committee.csv");
+        }
+
+        function exportByCountry() {
+            const grouped = groupBy(allDelegates, 'country');
+            let csvContent = "Country,Delegate Name,School,Committee\n";
+            for (const country of Object.keys(grouped).sort()) {
+                grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                    const row = [cleanText(d.country), d.name, d.school, cleanText(d.committee)];
+                    csvContent += row.map(val => `"${(val || "").replace(/"/g, '""')}"`).join(",") + "\n";
+                });
+            }
+            downloadCsv(csvContent, "delegates_by_country.csv");
+        }
+        
+        function downloadCsv(csvContent, filename) {
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "pyleamun_registrations.csv");
+            link.setAttribute("download", filename);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // --- HELPER FUNCTIONS (UNCHANGED) ---
+        // --- HELPER FUNCTIONS ---
+        function cleanText(str) {
+            if (!str) return "";
+            return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+        }
+
+        function toSentenceCase(str) {
+            if (!str) return "";
+            return str.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+        }
+        
         function parseRawData(rawText) {
             let cleanedText = rawText.replace(/’s_/g, "’s ").replace(/_/g, " ");
             if (cleanedText.includes("Here's what they had to say:")) { cleanedText = cleanedText.split("Here's what they had to say:")[1]; }
@@ -250,26 +319,7 @@
             }
             return parsedData;
         }
-        function displayByCommittee() {
-            const grouped = groupBy(allDelegates, 'committee');
-            let html = '<h2>📋 Delegates by Committee</h2>';
-            for (const committee of Object.keys(grouped).sort()) {
-                html += `<h3>${committee}</h3><ul>`;
-                grouped[committee].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => { html += `<li><b>${d.name}</b> (${d.school}) - Representing: ${d.country}</li>`; });
-                html += '</ul>';
-            }
-            document.getElementById('output').innerHTML = html;
-        }
-        function displayByCountry() {
-            const grouped = groupBy(allDelegates, 'country');
-            let html = '<h2>🌍 Delegates by Country</h2>';
-            for (const country of Object.keys(grouped).sort()) {
-                html += `<h3>🇺🇳 ${country}</h3><ul>`;
-                grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => { html += `<li><b>${d.name}</b> (${d.school}) - Committee: ${d.committee}</li>`; });
-                html += '</ul>';
-            }
-            document.getElementById('output').innerHTML = html;
-        }
+
         function groupBy(array, key) {
             return array.reduce((result, currentValue) => {
                 (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
