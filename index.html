@@ -224,7 +224,8 @@
             };
             const country1Name = parsedData["Country 1"] || "N/A";
             const country2Name = parsedData["Country 2"] || "N/A";
-            const COMMITTEE_MAP = {"UNEP": "UN Environment Programme 🌱", "SC": "Security Council 🔐", "ECOSOC": "Economic & Social Council 💰", "NATO": "NATO 🛡️", "WHO": "World Health Organisation 🏥", "HRC": "Human Rights Council 🤝", "UNESCO": "UNESCO 📚", "UN Women": "UN Women 👩‍⚖️", "HCC": "Historical Crisis Committee ⏳"};
+            // *** CORRECTION: Added "UN" mapping here to centrally change it to UN Women ***
+            const COMMITTEE_MAP = {"UNEP": "UN Environment Programme 🌱", "SC": "Security Council 🔐", "ECOSOC": "Economic & Social Council 💰", "NATO": "NATO 🛡️", "WHO": "World Health Organisation 🏥", "HRC": "Human Rights Council 🤝", "UNESCO": "UNESCO 📚", "UN Women": "UN Women 👩‍⚖️", "HCC": "Historical Crisis Committee ⏳", "UN": "UN Women 👩‍⚖️"};
 
             for (const key in parsedData) {
                 let delegateName = parsedData[key];
