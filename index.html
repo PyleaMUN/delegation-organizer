@@ -53,7 +53,7 @@
                     <button class="btn secondary" onclick="displayByCommittee()">View by Committee</button>
                     <button class="btn secondary" onclick="displayByCountry()">View by Country</button>
                     <button class="btn secondary" onclick="displayBySchool()">View by School</button>
-                    <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
+                    <button class="btn danger" onclick="handleClearDuplicates()">Clear Duplicates</button> <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
                 </div>
                 <div id="output"></div>
             </div>
@@ -146,6 +146,71 @@
             } else if (enteredPassword) {
                 alert("Incorrect password. Data was not cleared.");
             }
+        }
+
+        // --- NEW DUPLICATE CLEAR FUNCTION ---
+        function handleClearDuplicates() {
+            const enteredPassword = prompt("Please enter the admin password to clear duplicate entries:", "");
+            if (enteredPassword !== CLEAR_DATA_PASSWORD) {
+                if (enteredPassword) {
+                    alert("Incorrect password. Duplicate clear was cancelled.");
+                }
+                return;
+            }
+
+            if (!confirm("CONFIRMATION: Are you sure you want to scan for and delete duplicate delegate entries?")) {
+                return;
+            }
+
+            document.getElementById('status').textContent = "Scanning for duplicates...";
+
+            delegatesRef.once('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    document.getElementById('status').textContent = "No data found to check for duplicates.";
+                    return;
+                }
+
+                const delegateMap = {}; // Key: composite unique string, Value: first Firebase key
+                const duplicatesToDelete = []; // List of Firebase keys to delete
+                let deletedCount = 0;
+
+                for (const firebaseKey in data) {
+                    const delegate = data[firebaseKey];
+                    // Create a unique identifier string based on core delegate info
+                    const uniqueKey = `${delegate.name}::${delegate.school}::${delegate.committee}::${delegate.country}`.toLowerCase();
+
+                    if (delegateMap[uniqueKey]) {
+                        // Duplicate found! Add this entry's Firebase key to the list for deletion
+                        duplicatesToDelete.push(firebaseKey);
+                    } else {
+                        // First time seeing this unique delegate. Record its Firebase key.
+                        delegateMap[uniqueKey] = firebaseKey;
+                    }
+                }
+
+                if (duplicatesToDelete.length === 0) {
+                    document.getElementById('status').textContent = "✅ Scan complete. No duplicate entries were found.";
+                    return;
+                }
+
+                // Use a Promise.all to delete all duplicates simultaneously
+                const deletePromises = duplicatesToDelete.map(key => {
+                    return delegatesRef.child(key).remove().then(() => {
+                        deletedCount++;
+                    });
+                });
+
+                Promise.all(deletePromises)
+                    .then(() => {
+                        document.getElementById('status').textContent = `✅ Successfully removed ${deletedCount} duplicate delegate entries from the database.`;
+                        // The 'value' listener in initializeApp will automatically refresh allDelegates and the UI
+                    })
+                    .catch(error => {
+                        document.getElementById('status').textContent = `❌ Error clearing duplicates: ${error.message}`;
+                        console.error("Error clearing duplicates:", error);
+                    });
+            });
         }
         
         function structureDelegateData(parsedData) {
