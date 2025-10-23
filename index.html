@@ -47,13 +47,18 @@
             <div class="container">
                 <h2>Paste Form Submission Data Below</h2>
                 <textarea id="rawDataInput" placeholder="Paste the raw text from the Formsubmit email here..."></textarea>
-                <div class="button-group"><button id="processBtn" class="btn">Process Data</button></div>
+                <div class="button-group">
+                    <button id="processBtn" class="btn">Process Data</button>
+                    <button id="addSingleBtn" class="btn secondary">Add Single Delegate</button>
+                </div>
                 <div id="status"></div>
                 <div id="controls" class="button-group" style="display: none;">
                     <button class="btn secondary" onclick="displayByCommittee()">View by Committee</button>
                     <button class="btn secondary" onclick="displayByCountry()">View by Country</button>
                     <button class="btn secondary" onclick="displayBySchool()">View by School</button>
-                    <button class="btn danger" onclick="handleClearDuplicates()">Clear Duplicates</button> <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
+                    <button class="btn danger" onclick="handleClearDuplicates()">Clear Duplicates</button>
+                    <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
+                    <button class="btn danger" onclick="removeSingleDelegate()">Delete Delegate by Name</button>
                 </div>
                 <div id="output"></div>
             </div>
@@ -78,6 +83,21 @@
             messagingSenderId: "586095551075",
             appId: "1:586095551075:web:56d0e723275843d6dc4e56"
         };
+        
+        // *** COMMITTEE MAPPING - CENTRALIZED ***
+        const COMMITTEE_MAP = {
+            "UNEP": "UN Environment Programme 🌱", 
+            "SC": "Security Council 🔐", 
+            "ECOSOC": "Economic & Social Council 💰", 
+            "NATO": "NATO 🛡️", 
+            "WHO": "World Health Organisation 🏥", 
+            "HRC": "Human Rights Council 🤝", 
+            "UNESCO": "UNESCO 📚", 
+            "UN Women": "UN Women 👩‍⚖️", 
+            "HCC": "Historical Crisis Committee ⏳", 
+            "UN": "UN Women 👩‍⚖️"
+        };
+
 
         // --- INITIALIZATION ---
         firebase.initializeApp(firebaseConfig);
@@ -99,12 +119,21 @@
                 alert("Incorrect password.");
             }
         }
-
+        
+        // UPDATED initializeApp to correctly capture Firebase keys
         function initializeApp() {
             document.getElementById('app-container').classList.remove('hidden');
             delegatesRef.on('value', snapshot => {
                 const data = snapshot.val();
-                allDelegates = data ? Object.values(data) : [];
+                allDelegates = [];
+                if (data) {
+                    for (const key in data) {
+                        allDelegates.push({ 
+                            ...data[key], 
+                            firebaseKey: key // Add the unique key to the delegate object
+                        });
+                    }
+                }
                 updateUI();
             });
         }
@@ -117,6 +146,8 @@
         
         // --- EVENT LISTENERS ---
         document.getElementById('processBtn').addEventListener('click', handleProcessData);
+        document.getElementById('addSingleBtn').addEventListener('click', addSingleDelegate); 
+
         
         // --- DATA & DISPLAY FUNCTIONS ---
         function handleProcessData() {
@@ -136,7 +167,92 @@
                 document.getElementById('status').textContent = "❌ Error: Could not parse the data. Please check the format.";
             }
         }
+        
+        function addSingleDelegate() {
+            const name = prompt("Enter Delegate's Full Name (e.g., John Smith):");
+            if (!name) return;
 
+            const school = prompt("Enter School Name (e.g., Athens College):");
+            if (!school) return;
+
+            const committeeShort = prompt("Enter Committee Short Code (e.g., SC, WHO, UNEP, HCC):").toUpperCase();
+            if (!committeeShort) return;
+
+            const country = prompt("Enter Country/Topic Represented:");
+            if (!country) return;
+
+            // Optional Advisor Info (can be N/A)
+            const advisor1_email = prompt("Enter Advisor 1 Email (optional):") || 'N/A';
+            const advisor1_mobile = prompt("Enter Advisor 1 Mobile (optional):") || 'N/A';
+            const advisor2_email = prompt("Enter Advisor 2 Email (optional):") || 'N/A';
+            const advisor2_mobile = prompt("Enter Advisor 2 Mobile (optional):") || 'N/A';
+            
+            const mappedCommittee = COMMITTEE_MAP[committeeShort] || committeeShort;
+
+            const delegateObject = {
+                name: toSentenceCase(name),
+                school: school,
+                committee: mappedCommittee,
+                country: country,
+                advisor1_email: advisor1_email,
+                advisor1_mobile: advisor1_mobile,
+                advisor2_email: advisor2_email,
+                advisor2_mobile: advisor2_mobile,
+            };
+
+            delegatesRef.push(delegateObject)
+                .then(() => {
+                    document.getElementById('status').textContent = `✅ Successfully added delegate ${name} from ${school}.`;
+                })
+                .catch(error => {
+                    document.getElementById('status').textContent = `❌ Error adding delegate: ${error.message}`;
+                });
+        }
+        
+        // *** NEW FUNCTION: REMOVE SINGLE DELEGATE BY NAME/SCHOOL ***
+        function removeSingleDelegate() {
+            const enteredPassword = prompt("Enter admin password to delete single entry:", "");
+            if (enteredPassword !== CLEAR_DATA_PASSWORD) {
+                if (enteredPassword) {
+                    alert("Incorrect password. Deletion cancelled.");
+                }
+                return;
+            }
+            
+            const targetName = prompt("Enter the Delegate's FULL NAME to delete:").trim();
+            if (!targetName) return;
+            
+            const targetSchool = prompt(`Enter the School Name for delegate "${targetName}":`).trim();
+            if (!targetSchool) return;
+
+            // Normalize inputs for comparison
+            const normalizedTargetName = toSentenceCase(targetName);
+            const normalizedTargetSchool = toSentenceCase(targetSchool);
+
+            // Find the matching delegate
+            const delegateToDelete = allDelegates.find(d => 
+                toSentenceCase(d.name) === normalizedTargetName && 
+                toSentenceCase(d.school) === normalizedTargetSchool
+            );
+
+            if (!delegateToDelete) {
+                document.getElementById('status').textContent = `❌ Error: Delegate "${normalizedTargetName}" from "${normalizedTargetSchool}" not found.`;
+                return;
+            }
+
+            const key = delegateToDelete.firebaseKey;
+            
+            if (confirm(`FINAL WARNING: Are you sure you want to permanently delete: \n\nName: ${delegateToDelete.name}\nSchool: ${delegateToDelete.school}\nCommittee: ${delegateToDelete.committee}\nCountry: ${delegateToDelete.country}`)) {
+                database.ref('delegates/' + key).remove()
+                    .then(() => {
+                        document.getElementById('status').textContent = `✅ Successfully deleted delegate ${delegateToDelete.name} from ${delegateToDelete.school}.`;
+                    })
+                    .catch(error => {
+                        document.getElementById('status').textContent = `❌ Error deleting delegate: ${error.message}`;
+                    });
+            }
+        }
+        
         function clearAllData() {
             const enteredPassword = prompt("This is a destructive action. Please enter the admin password to clear all data:", "");
             if (enteredPassword === CLEAR_DATA_PASSWORD) {
@@ -224,8 +340,6 @@
             };
             const country1Name = parsedData["Country 1"] || "N/A";
             const country2Name = parsedData["Country 2"] || "N/A";
-            // *** CORRECTION: Added "UN" mapping here to centrally change it to UN Women ***
-            const COMMITTEE_MAP = {"UNEP": "UN Environment Programme 🌱", "SC": "Security Council 🔐", "ECOSOC": "Economic & Social Council 💰", "NATO": "NATO 🛡️", "WHO": "World Health Organisation 🏥", "HRC": "Human Rights Council 🤝", "UNESCO": "UNESCO 📚", "UN Women": "UN Women 👩‍⚖️", "HCC": "Historical Crisis Committee ⏳", "UN": "UN Women 👩‍⚖️"};
 
             for (const key in parsedData) {
                 let delegateName = parsedData[key];
