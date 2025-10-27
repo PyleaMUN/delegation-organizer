@@ -691,7 +691,7 @@
 
         // --- DISPLAY FUNCTIONS WITH NUMBERING AND SORTING ---
 
-        // *** displayBySchool (No change needed) ***
+        // *** displayBySchool ***
         function displayBySchool() {
             const grouped = groupBy(allDelegates, 'school');
             let html = '<h2>🏫 Delegates by School</h2>';
@@ -703,7 +703,14 @@
                  if (!schoolDelegates || schoolDelegates.length === 0) continue; // Skip if empty
                 const firstDelegate = schoolDelegates[0];
                 let delegateCounter = 1;
-                const escapedSchoolName = school.replace(/'/g, "\\'");
+                
+                // Escape for JS (' \ \n \r) AND for HTML (")
+                const escapedSchoolName = school.replace(/\\/g, '\\\\')
+                                                .replace(/'/g, "\\'")
+                                                .replace(/\n/g, '\\n')
+                                                .replace(/\r/g, '\\r')
+                                                .replace(/"/g, '&quot;');
+                                                
                 html += `<h3>
                             <span>${school} (Delegates: ${schoolDelegates.length})</span>
                             <button class="btn print" onclick="printSchoolPDF('${escapedSchoolName}')">Print PDF</button>
@@ -725,7 +732,7 @@
             document.getElementById('output').innerHTML = html;
         }
 
-        // *** displayByCommittee (No change needed) ***
+        // *** displayByCommittee ***
         function displayByCommittee() {
             const grouped = groupBy(allDelegates, 'committee');
             let html = '<h2>📋 Delegates by Committee</h2>';
@@ -736,7 +743,14 @@
                 const committeeDelegates = grouped[committee];
                  if (!committeeDelegates || committeeDelegates.length === 0) continue; // Skip if empty
                 let delegateCounter = 1;
-                const escapedCommitteeName = committee.replace(/'/g, "\\'");
+                
+                // Escape for JS (' \ \n \r) AND for HTML (")
+                const escapedCommitteeName = committee.replace(/\\/g, '\\\\')
+                                                    .replace(/'/g, "\\'")
+                                                    .replace(/\n/g, '\\n')
+                                                    .replace(/\r/g, '\\r')
+                                                    .replace(/"/g, '&quot;');
+                                                    
                 html += `<h3>
                             <span>${committee} (Delegates: ${committeeDelegates.length})</span>
                             <button class="btn print" onclick="printCommitteePDF('${escapedCommitteeName}')">Print PDF</button>
@@ -751,7 +765,7 @@
             document.getElementById('output').innerHTML = html;
         }
 
-        // *** displayByCountry (Adjusted for normalized data) ***
+        // *** displayByCountry ***
         function displayByCountry() {
             // Normalize BEFORE grouping
             const normalizedDelegates = allDelegates.map(d => ({
@@ -768,7 +782,14 @@
                 const countryDelegates = grouped[country];
                  if (!countryDelegates || countryDelegates.length === 0) continue; // Skip if empty
                 let delegateCounter = 1;
-                const escapedCountryName = country.replace(/'/g, "\\'");
+                
+                // Escape for JS (' \ \n \r) AND for HTML (")
+                const escapedCountryName = country.replace(/\\/g, '\\\\')
+                                                  .replace(/'/g, "\\'")
+                                                  .replace(/\n/g, '\\n')
+                                                  .replace(/\r/g, '\\r')
+                                                  .replace(/"/g, '&quot;');
+                                                  
                 html += `<h3>
                             <span>🇺🇳 ${country} (Delegates: ${countryDelegates.length})</span>
                             <button class="btn print" onclick="printCountryPDF('${escapedCountryName}')">Print PDF</button>
@@ -818,7 +839,10 @@
             let csvContent = "Country,Delegate Name,School,Committee\n";
             const sortedCountries = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
             for (const country of sortedCountries) {
-                grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
+                // --- START CORRECTION ---
+                // Removed the stray period that caused the syntax error
+                grouped[country].sort((a, b) => a.name.localeCompare(b.name)).forEach(d => { 
+                // --- END CORRECTION ---
                     const row = [cleanText(d.country), d.name, d.school, cleanText(d.committee)];
                     csvContent += row.map(val => `"${(val || "").replace(/"/g, '""')}"`).join(",") + "\n";
                 });
@@ -926,7 +950,7 @@
              return `
                 <html>
                 <head>
-                    <title>PyleaMUN Delegates - ${subTitle}</title>
+                    <title>PyleaMUN Delegates - ${subTitle.replace(/:/g, ' -')}</title>
                     <style>
                         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20mm; }
                         .print-logo { width: 100px; height: auto; display: block; margin: 0 auto 20px auto; }
