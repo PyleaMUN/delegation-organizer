@@ -60,10 +60,13 @@
                     <button class="btn secondary" onclick="displayBySchool()">View by School</button>
                     <button class="btn secondary" onclick="editDelegateInfo()">Edit Delegate</button>
                     <button class="btn secondary" onclick="editSchoolName()">Edit School Name</button>
-                    <button class="btn secondary" onclick="editCountryName()">Edit Country Name</button> <button class="btn danger" onclick="handleClearDuplicates()">Clear Duplicates</button>
+                    <button class="btn secondary" onclick="editCountryName()">Edit Country Name</button>
+                    <button class="btn secondary" onclick="editCommitteeName()">Edit Committee Name</button>
+                    <button class="btn danger" onclick="handleClearDuplicates()">Clear Duplicates</button>
                     <button class="btn danger" onclick="clearAllData()">Clear All Data</button>
                     <button class="btn danger" onclick="removeSingleDelegate()">Delete Delegate by Name</button>
-                    <button class="btn cleanup" onclick="fixAllCountryCases()">Fix All Country Cases</button> </div>
+                    <button class="btn cleanup" onclick="fixAllCountryCases()">Fix All Country Cases</button> 
+                </div>
                 <div id="output"></div>
             </div>
         </main>
@@ -512,8 +515,77 @@
                     console.error("Error updating country names:", error);
                 });
         }
+        
+        // *** EDIT COMMITTEE NAME ***
+        function editCommitteeName() {
+            const enteredPassword = prompt("Please enter the organizer password to bulk edit committee names:", "");
+            if (enteredPassword !== SHARED_PASSWORD) {
+                if (enteredPassword) alert("Incorrect password. Editing cancelled.");
+                return;
+            }
 
+            const oldCommitteeNameInput = prompt("Enter the CURRENT, FULL Committee Name to change (must be exact, e.g., 'Security Council 🔐'):").trim();
+            if (!oldCommitteeNameInput) return;
 
+            const newCommitteeNameInput = prompt(`Enter the NEW Committee Name to replace "${oldCommitteeNameInput}":`).trim();
+            if (!newCommitteeNameInput) return;
+
+            // Check if names are identical
+            if (oldCommitteeNameInput === newCommitteeNameInput) {
+                 alert("The new committee name is identical to the old one. No changes made.");
+                 return;
+            }
+
+            document.getElementById('status').textContent = `Searching for delegates in "${oldCommitteeNameInput}"...`;
+
+            database.ref('delegates').once('value')
+                .then(snapshot => {
+                    const updates = {};
+                    let updateCount = 0;
+                    let foundMatch = false;
+
+                    snapshot.forEach(childSnapshot => {
+                        const delegate = childSnapshot.val();
+                        const firebaseKey = childSnapshot.key;
+
+                        // Direct, case-sensitive comparison for committee names
+                        if (delegate.committee === oldCommitteeNameInput) {
+                            foundMatch = true;
+                            if (delegate.committee !== newCommitteeNameInput) { 
+                                updates[`/${firebaseKey}/committee`] = newCommitteeNameInput;
+                                updateCount++;
+                            }
+                        }
+                    });
+
+                     if (foundMatch && updateCount === 0) {
+                        document.getElementById('status').textContent = `✅ Committee "${oldCommitteeNameInput}" is already named "${newCommitteeNameInput}". No updates needed.`;
+                        return;
+                    }
+                    if (!foundMatch) {
+                         document.getElementById('status').textContent = `❌ Error: No delegates found in committee "${oldCommitteeNameInput}". Please check the spelling and emoji.`;
+                         return;
+                     }
+
+                    if (!confirm(`Are you sure you want to change the committee name from "${oldCommitteeNameInput}" to "${newCommitteeNameInput}" for ${updateCount} delegates?`)) {
+                        document.getElementById('status').textContent = `Committee name change cancelled.`;
+                        return;
+                    }
+
+                    if (updateCount > 0) {
+                        return database.ref('delegates').update(updates)
+                            .then(() => {
+                                document.getElementById('status').textContent = `✅ Successfully updated ${updateCount} delegate records. Committee name changed to "${newCommitteeNameInput}".`;
+                            });
+                    } else {
+                         document.getElementById('status').textContent = `No updates were necessary for committee "${oldCommitteeNameInput}".`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('status').textContent = `❌ Error during committee name update: ${error.message}`;
+                    console.error("Error updating committee names:", error);
+                });
+        }
         // *** REMOVE SINGLE DELEGATE BY NAME/SCHOOL ***
         function removeSingleDelegate() {
             const enteredPassword = prompt("Enter admin password to delete single entry:", "");
@@ -545,7 +617,7 @@
 
             const key = delegateToDelete.firebaseKey;
 
-            if (confirm(`FINAL WARNING: Are you sure you want to permanently delete: \n\nName: ${delegateToDelete.name}\nSchool: ${delegateToDelete.school}\nCommittee: ${delegateToDelete.committee}\nCountry: ${delegateToDelete.country}`)) {
+            if (confirm(`FINAL WARNING: Are you sure you want to permanently delete: \n\Name: ${delegateToDelete.name}\nSchool: ${delegateToDelete.school}\nCommittee: ${delegateToDelete.committee}\nCountry: ${delegateToDelete.country}`)) {
                 database.ref('delegates/' + key).remove()
                     .then(() => {
                         document.getElementById('status').textContent = `✅ Successfully deleted delegate ${delegateToDelete.name} from ${delegateToDelete.school}.`;
