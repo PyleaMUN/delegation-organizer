@@ -84,7 +84,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyBeEVJ9eu-pVhK_z3ds8UurrqaBeBBDwN4",
             authDomain: "pyleamun-data.firebaseapp.com",
-            databaseURL: "https://pyleamun-data-default-rtdb.europe-west1.firebasedatabase.app",
+            databaseURL: "httpshttps://pyleamun-data-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "pyleamun-data",
             storageBucket: "pyleamun-data.appspot.com",
             messagingSenderId: "586095551075",
@@ -316,11 +316,16 @@
             // *** APPLY formatCountryName HELPER ***
             let processedNewCountry = formatCountryName(newCountry);
 
+            // --- FIX #1: This block is commented out to ALLOW saving the new name ---
+            /*
             // Apply HCC rule if the short code is HCC on edit
             if (newCommitteeInput === "HCC") {
                 processedNewCountry = HCC_COUNTRY_VALUE;
                 alert(`Committee is HCC. Country/Topic reset to: ${processedNewCountry}`);
             }
+            */
+            // --- END FIX #1 ---
+
 
             // Advisor Info
             const newAdvisor1Email = prompt("Enter NEW Advisor 1 Email:", delegateToEdit.advisor1_email) || delegateToEdit.advisor1_email;
@@ -749,14 +754,19 @@
         }
 
 
-        // --- NORMALIZE HCC COUNTRY (No change needed) ---
+        // --- FIX #2: MODIFIED NORMALIZE HCC COUNTRY ---
         function normalizeHCCCountry(delegate) {
             if (!delegate || !delegate.committee) return delegate ? delegate.country : ""; // Safety check
-            // Use the formatted country unless it's HCC
+            
             const formattedCountry = delegate.country; // Already formatted on input/edit/cleanup
-            if (delegate.committee === HCC_COUNTRY_MAPPED_NAME || formattedCountry === HCC_COUNTRY_VALUE) {
+            
+            // This is the new logic:
+            // If the country *is* the placeholder, return the placeholder.
+            if (formattedCountry === HCC_COUNTRY_VALUE) {
                 return HCC_COUNTRY_VALUE;
             }
+            // Otherwise, return the *actual* country stored in the database
+            // (e.g., "France"), even if the committee is HCC.
             return formattedCountry;
         }
 
