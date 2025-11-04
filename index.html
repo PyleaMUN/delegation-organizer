@@ -77,7 +77,7 @@
 
     <script>
         // --- PASSWORDS ---
-        const SHARED_PASSWORD = "thess26@";
+        const SHARED_PASSWORD = "329199p";
         const CLEAR_DATA_PASSWORD = "panos26@";
 
         // --- FIREBASE CONFIG ---
@@ -878,7 +878,7 @@
                          </h3>`;
                 html += `<ul>`;
                 countryDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
-                    html += `<li><strong>${delegateCounter++}.</strong> <b>${d.name}</b> (${d.school}) - Committee: ${d.committee}</li>`;
+                    html += `<li><strong>${delegateCounter++}.</b> <b>${d.name}</b> (${d.school}) - Committee: ${d.committee}</li>`;
                 });
                 html += '</ul>';
             }
@@ -1077,7 +1077,7 @@
 
             schoolDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
                 const displayCountry = normalizeHCCCountry(d);
-                listItemsHtml += `<li><strong>${delegateCounter++}.</strong> <b>${d.name}</b> - Committee: ${cleanText(d.committee)} (${displayCountry})</li>`;
+                listItemsHtml += `<li><strong>${delegateCounter++}.</b> <b>${d.name}</b> - Committee: ${cleanText(d.committee)} (${displayCountry})</li>`;
             });
 
             const printHtml = generatePrintHTML(
@@ -1108,7 +1108,7 @@
 
             committeeDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
                 const displayCountry = normalizeHCCCountry(d);
-                 listItemsHtml += `<li><strong>${delegateCounter++}.</strong> <b>${d.name}</b> (${d.school}) - Representing: ${displayCountry}</li>`;
+                 listItemsHtml += `<li><strong>${delegateCounter++}.</b> <b>${d.name}</b> (${d.school}) - Representing: ${displayCountry}</li>`;
             });
 
              const printHtml = generatePrintHTML(
@@ -1139,7 +1139,7 @@
             let listItemsHtml = '';
 
             countryDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
-                listItemsHtml += `<li><strong>${delegateCounter++}.</strong> <b>${d.name}</b> (${d.school}) - Committee: ${cleanText(d.committee)}</li>`;
+                listItemsHtml += `<li><strong>${delegateCounter++}.</b> <b>${d.name}</b> (${d.school}) - Committee: ${cleanText(d.committee)}</li>`;
             });
 
              const printHtml = generatePrintHTML(
