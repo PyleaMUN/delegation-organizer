@@ -1003,7 +1003,10 @@
                     html += `<strong>Advisor 1:</strong> ${firstDelegate.advisor1_email || 'N/A'} | ${firstDelegate.advisor1_mobile || 'N/A'}<br>`;
                 }
                 if (firstDelegate.advisor2_email || firstDelegate.advisor2_mobile) {
-                    html += `<strong>Advisor 2:</strong> ${firstDelegate.advisor2_email || 'N/A'} | ${firstDelegate.advisor2_mobile || 'N/A'}`;
+                    html += `<strong>Advisor 2:</strong> ${firstDelegate.advisor2_email || 'N/A'} | ${firstDelegate.advisor2_mobile || 'N/A'}<br>`;
+                }
+                if (firstDelegate.advisor3_email || firstDelegate.advisor3_mobile) {
+                    html += `<strong>Advisor 3:</strong> ${firstDelegate.advisor3_email || 'N/A'} | ${firstDelegate.advisor3_mobile || 'N/A'}`;
                 }
                 html += `</div><ul>`;
                 schoolDelegates.sort((a, b) => a.name.localeCompare(b.name)).forEach(d => {
@@ -1199,9 +1202,12 @@
                      advisorHtml += `<strong>Advisor 1:</strong> ${firstDelegate.advisor1_email || 'N/A'} | ${firstDelegate.advisor1_mobile || 'N/A'}<br>`;
                  }
                  if (firstDelegate.advisor2_email || firstDelegate.advisor2_mobile) {
-                     advisorHtml += `<strong>Advisor 2:</strong> ${firstDelegate.advisor2_email || 'N/A'} | ${firstDelegate.advisor2_mobile || 'N/A'}`;
-                 }
-                 advisorHtml += `</div>`;
+                 advisorHtml += `<strong>Advisor 2:</strong> ${firstDelegate.advisor2_email || 'N/A'} | ${firstDelegate.advisor2_mobile || 'N/A'}<br>`;
+             }
+             if (firstDelegate.advisor3_email || firstDelegate.advisor3_mobile) {
+                 advisorHtml += `<strong>Advisor 3:</strong> ${firstDelegate.advisor3_email || 'N/A'} | ${firstDelegate.advisor3_mobile || 'N/A'}`;
+             }
+             advisorHtml += `</div>`;
              }
 
              return `
